@@ -1,0 +1,5 @@
+node_modules/
+.husky/_/
+web/.next/
+web/node_modules/
+*.log

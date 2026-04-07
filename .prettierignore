@@ -1,0 +1,8 @@
+node_modules
+web/node_modules
+web/.next
+.git
+.husky/_
+coverage
+dist
+build

@@ -1,0 +1,38 @@
+{
+  "name": "student-records",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start",
+    "lint": "npm --prefix web run lint",
+    "lint:web": "eslint --config web/eslint.config.mjs web --max-warnings=0",
+    "lint:web:fix": "eslint --config web/eslint.config.mjs web --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "web/**/*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "eslint --config web/eslint.config.mjs --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{js,jsx,ts,tsx,mjs,cjs,json,md,yml,yaml,css,scss}": [
+      "prettier --write"
+    ],
+    "{db,docs}/**/*.md": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "eslint": "^9.24.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3"
+  }
+}
