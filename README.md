@@ -89,6 +89,22 @@ Related tasks should include at least one Jira key (example: `SCH-123`) or GitHu
 
 The workflow validates required section headings and task references on PR open/update.
 
+## AI Project Manager
+
+This repo is set up for issue-driven planning through GitHub Issues.
+
+- AI project manager guide: `docs/ai-project-manager.md`
+- Epic issue template: `.github/ISSUE_TEMPLATE/epic.yml`
+- Task issue template: `.github/ISSUE_TEMPLATE/task.yml`
+
+Recommended flow:
+
+1. Create an epic issue for the overall goal.
+2. Break the epic into smaller tasks.
+3. Keep one task per PR whenever possible.
+4. Link PRs back to the parent issue.
+5. Use labels like `ai-planned`, `ai-in-progress`, and `ai-ready-for-review` to track status.
+
 ## Pre-Commit Validation
 
 - Husky manages git hooks from `.husky/`
