@@ -52,6 +52,8 @@ Result: one database can host multiple schools while keeping data isolated by te
 
 This design supports creating student/teacher records before provisioning login access.
 
+Access control rules and route-level permissions are documented in [docs/access-control.md](access-control.md).
+
 ## Academic Calendar and School Structure
 
 ### Calendar layer
@@ -189,3 +191,4 @@ These reduce repetitive join complexity in application code.
 - enforce business rules such as one active academic year/term per school in service logic (or add partial unique indexes)
 - keep `term_results` synchronized via trigger or background recomputation job when scores change
 - apply role-based access using `profiles.role` and `school_id` scoping in all queries
+- follow the route/feature matrix and unauthorized behavior rules in [docs/access-control.md](access-control.md)

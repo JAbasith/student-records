@@ -105,6 +105,11 @@ Recommended flow:
 4. Link PRs back to the parent issue.
 5. Use labels like `ai-planned`, `ai-in-progress`, and `ai-ready-for-review` to track status.
 
+## Access Control
+
+- role and route access matrix: [docs/access-control.md](docs/access-control.md)
+- architecture context for the schema role model: [docs/architecture.md](docs/architecture.md)
+
 ## Pre-Commit Validation
 
 - Husky manages git hooks from `.husky/`
