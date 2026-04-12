@@ -543,6 +543,102 @@ WHERE ay.is_active = TRUE;
 
 
 -- =============================================================================
+-- SECTION 16: ALLOWED PROFILE LIST (ADMIN-MANAGED LOGIN GATE)
+-- =============================================================================
+-- Admin pre-registers users here with email, role, and optional identity mapping.
+-- Only emails in this table can complete login.
+--
+-- First successful login flow:
+-- 1) OAuth callback checks allowlist by email.
+-- 2) If allowed, create/update profile with role and school.
+-- 3) If role is teacher/student, optionally link to existing domain row.
+-- 4) If not allowed, login is rejected.
+-- =============================================================================
+
+CREATE TABLE login_allowlist (
+    id           BIGSERIAL PRIMARY KEY,
+    email        TEXT      NOT NULL UNIQUE,
+    school_id    BIGINT    NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+    role         user_role NOT NULL,
+    full_name    TEXT,
+    admission_no TEXT,
+    employee_no  TEXT,
+    is_active    BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_login_allowlist_identity CHECK (
+        (role = 'admin'   AND admission_no IS NULL AND employee_no IS NULL) OR
+        (role = 'teacher' AND admission_no IS NULL AND employee_no IS NOT NULL) OR
+        (role = 'student' AND admission_no IS NOT NULL AND employee_no IS NULL)
+    )
+);
+
+CREATE INDEX idx_login_allowlist_school ON login_allowlist(school_id);
+CREATE INDEX idx_login_allowlist_role   ON login_allowlist(school_id, role);
+CREATE INDEX idx_login_allowlist_email_lower ON login_allowlist((lower(email)));
+
+
+CREATE OR REPLACE FUNCTION upsert_profile_from_allowlist(
+    p_user_id UUID,
+    p_email TEXT,
+    p_full_name TEXT DEFAULT NULL
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    allowed login_allowlist%ROWTYPE;
+BEGIN
+    SELECT *
+    INTO allowed
+    FROM login_allowlist
+    WHERE lower(email) = lower(p_email)
+      AND is_active = TRUE
+    LIMIT 1;
+
+    IF NOT FOUND THEN
+        RETURN FALSE;
+    END IF;
+
+    INSERT INTO profiles (id, school_id, role, full_name, is_active)
+    VALUES (
+        p_user_id,
+        allowed.school_id,
+        allowed.role,
+        COALESCE(NULLIF(p_full_name, ''), allowed.full_name),
+        TRUE
+    )
+    ON CONFLICT (id)
+    DO UPDATE SET
+        school_id = EXCLUDED.school_id,
+        role = EXCLUDED.role,
+        full_name = COALESCE(EXCLUDED.full_name, profiles.full_name),
+        is_active = TRUE;
+
+    IF allowed.role = 'teacher' THEN
+        UPDATE teachers
+        SET profile_id = p_user_id
+        WHERE school_id = allowed.school_id
+          AND employee_no = allowed.employee_no
+          AND profile_id IS NULL;
+    ELSIF allowed.role = 'student' THEN
+        UPDATE students
+        SET profile_id = p_user_id
+        WHERE school_id = allowed.school_id
+          AND admission_no = allowed.admission_no
+          AND profile_id IS NULL;
+    END IF;
+
+    RETURN TRUE;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION upsert_profile_from_allowlist(UUID, TEXT, TEXT) TO authenticated;
+
+
+-- =============================================================================
 -- END OF SCHEMA
 -- =============================================================================
 -- Table summary:
@@ -556,5 +652,6 @@ WHERE ay.is_active = TRUE;
 --   Assessment       : assessments, assessment_scores
 --   Reporting cache  : term_results
 --   Attendance       : attendance
+--   Login gate       : login_allowlist, upsert_profile_from_allowlist(...)
 --   Views            : v_students, v_teachers, v_subject_offerings, v_active_enrollments
 -- =============================================================================
