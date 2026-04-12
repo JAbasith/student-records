@@ -24,12 +24,15 @@ type SessionAuthorizationClient = {
     params: { p_user_id: string; p_email: string; p_full_name: string | null },
   ) => PromiseLike<{ data: boolean | null; error: Error | null }>;
   from: (table: "profiles") => {
-    select: (columns: "role") => {
+    select: (columns: string) => {
       eq: (
         column: "id",
         value: string,
       ) => {
-        maybeSingle: () => PromiseLike<{ data: { role: UserRole } | null; error: Error | null }>;
+        maybeSingle: () => PromiseLike<{
+          data: { id?: string; role?: UserRole } | null;
+          error: Error | null;
+        }>;
       };
     };
   };
@@ -64,6 +67,17 @@ export async function ensureAllowlistedSession(
   if (userError || !user || !user.email) {
     await client.auth.signOut();
     return "session-user-missing";
+  }
+
+  const { data: existingProfile, error: profileLookupError } = await client
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Existing profiles can continue login without allowlist checks.
+  if (!profileLookupError && existingProfile?.id) {
+    return null;
   }
 
   const { data: isApproved, error: approvalError } = await client.rpc(
@@ -104,7 +118,7 @@ export async function getSessionUserRole(supabase: unknown): Promise<UserRole | 
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!error && data) {
+    if (!error && data?.role) {
       return data.role;
     }
 

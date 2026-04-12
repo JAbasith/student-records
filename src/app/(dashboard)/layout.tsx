@@ -1,9 +1,11 @@
 import { LogOut } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { UserRole } from "@/features/access-control/access-control.types";
 import { getAuthenticatedUserRoleOrRedirect } from "@/features/auth/server/dashboard-access";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,9 +15,82 @@ const roleTitles = {
   student: "Student workspace",
 } as const;
 
+type NavItem = {
+  href?: string;
+  label: string;
+};
+
+type NavSection = {
+  items: NavItem[];
+  title: string;
+};
+
+const roleNavigation: Record<UserRole, NavSection[]> = {
+  admin: [
+    {
+      title: "Administration",
+      items: [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Allowlist management", href: "/admin/allowlist" },
+        { label: "User management" },
+        { label: "Academic setup" },
+        { label: "Reports" },
+      ],
+    },
+  ],
+  teacher: [
+    {
+      title: "Teaching",
+      items: [
+        { label: "Dashboard", href: "/teacher" },
+        { label: "My classes" },
+        { label: "Attendance" },
+        { label: "Assessments" },
+        { label: "Grades" },
+      ],
+    },
+  ],
+  student: [
+    {
+      title: "Student",
+      items: [
+        { label: "Dashboard", href: "/student" },
+        { label: "My subjects" },
+        { label: "Attendance" },
+        { label: "Assessments" },
+        { label: "Report cards" },
+      ],
+    },
+  ],
+};
+
+function NavItemRow({ item }: Readonly<{ item: NavItem }>) {
+  if (item.href) {
+    return (
+      <Link
+        href={item.href}
+        className="block rounded-xl border border-border/70 bg-background px-3 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-muted"
+      >
+        {item.label}
+      </Link>
+    );
+  }
+
+  return (
+    <span className="block rounded-xl border border-border/60 bg-muted/35 px-3 py-2 text-sm text-muted-foreground">
+      {item.label}
+    </span>
+  );
+}
+
+function getFlatNavItems(sections: NavSection[]): NavItem[] {
+  return sections.flatMap((section) => section.items);
+}
+
 export default async function DashboardLayout({ children }: Readonly<{ children: ReactNode }>) {
   const supabase = await createClient();
   const role = await getAuthenticatedUserRoleOrRedirect(supabase);
+  const navigation = roleNavigation[role];
 
   async function handleSignOut() {
     "use server";
@@ -59,7 +134,36 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
         </div>
       </header>
 
-      <main className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+      <main className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 space-y-4 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              {navigation.map((section) => (
+                <div key={section.title} className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-muted">{section.title}</p>
+                  <div className="space-y-2">
+                    {section.items.map((item) => <NavItemRow key={item.label} item={item} />)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          <div className="space-y-4">
+            <section className="space-y-3 lg:hidden">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {getFlatNavItems(navigation).map((item) => (
+                  <div key={item.label} className="min-w-44">
+                    <NavItemRow item={item} />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {children}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
