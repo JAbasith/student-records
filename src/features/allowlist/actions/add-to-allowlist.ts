@@ -58,6 +58,52 @@ export async function addToAllowlist(input: AddToAllowlistInput): Promise<AddToA
       employeeNo = input.identityNumber;
     }
 
+    if (admissionNo) {
+      const { data: existingAdmission, error: admissionLookupError } = await supabase
+        .from("login_allowlist")
+        .select("id")
+        .eq("school_id", schoolId)
+        .eq("admission_no", admissionNo)
+        .maybeSingle();
+
+      if (admissionLookupError) {
+        return {
+          success: false,
+          error: admissionLookupError.message || "Failed to validate admission number",
+        };
+      }
+
+      if (existingAdmission) {
+        return {
+          success: false,
+          error: "This admission number is already on the allowlist",
+        };
+      }
+    }
+
+    if (employeeNo) {
+      const { data: existingEmployee, error: employeeLookupError } = await supabase
+        .from("login_allowlist")
+        .select("id")
+        .eq("school_id", schoolId)
+        .eq("employee_no", employeeNo)
+        .maybeSingle();
+
+      if (employeeLookupError) {
+        return {
+          success: false,
+          error: employeeLookupError.message || "Failed to validate employee number",
+        };
+      }
+
+      if (existingEmployee) {
+        return {
+          success: false,
+          error: "This employee number is already on the allowlist",
+        };
+      }
+    }
+
     // Insert into login_allowlist
     const { error: insertError } = await supabase.from("login_allowlist").insert({
       email: input.email,
@@ -70,8 +116,20 @@ export async function addToAllowlist(input: AddToAllowlistInput): Promise<AddToA
     });
 
     if (insertError) {
-      // Handle duplicate email
+      // Handle duplicate constraints from DB level validation
       if (insertError.code === "23505") {
+        if (insertError.message.includes("admission_no")) {
+          return {
+            success: false,
+            error: "This admission number is already on the allowlist",
+          };
+        }
+        if (insertError.message.includes("employee_no")) {
+          return {
+            success: false,
+            error: "This employee number is already on the allowlist",
+          };
+        }
         return {
           success: false,
           error: "This email is already on the allowlist",
