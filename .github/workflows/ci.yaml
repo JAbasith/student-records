@@ -21,13 +21,13 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install web dependencies
-        run: npm --prefix web ci
+      - name: Install dependencies
+        run: npm ci
 
       - name: Lint
-        run: npm --prefix web run lint
+        run: npm run lint
 
       - name: Build
-        run: npm --prefix web run build
+        run: npm run build
