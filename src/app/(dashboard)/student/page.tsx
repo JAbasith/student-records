@@ -80,7 +80,7 @@ export default async function StudentDashboardPage() {
                 Personal view only
               </Badge>
             </div>
-            <CardTitle className="max-w-2xl text-3xl font-semibold tracking-tight text-brand-ink sm:text-4xl">
+            <CardTitle className="max-w-2xl text-2xl font-semibold tracking-tight text-brand-ink sm:text-3xl lg:text-4xl">
               See your attendance, grades, and progress in one calm snapshot.
             </CardTitle>
             <CardDescription className="max-w-2xl text-base leading-7 text-brand-muted">
@@ -186,7 +186,22 @@ export default async function StudentDashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                <div className="space-y-3 md:hidden">
+                  {[
+                    ["12 Apr", "Present", "On time"],
+                    ["11 Apr", "Late", "Bus delay"],
+                    ["10 Apr", "Present", "On time"],
+                    ["9 Apr", "Excused", "Medical note"],
+                  ].map(([date, status, note]) => (
+                    <div key={date} className="rounded-2xl border border-border/70 bg-muted/40 p-4">
+                      <p className="font-medium text-brand-ink">{date}</p>
+                      <p className="mt-1 text-sm text-brand-muted">{status}</p>
+                      <p className="text-sm text-brand-muted">{note}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden overflow-x-auto md:block">
                   <Table className="min-w-175">
                     <TableHeader>
                       <TableRow>
@@ -224,7 +239,17 @@ export default async function StudentDashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                <div className="space-y-3 md:hidden">
+                  {resultRows.map(([subject, percentage, grade, status]) => (
+                    <div key={subject} className="rounded-2xl border border-border/70 bg-muted/40 p-4">
+                      <p className="font-medium text-brand-ink">{subject}</p>
+                      <p className="mt-1 text-sm text-brand-muted">{percentage} · {grade}</p>
+                      <p className="text-sm text-brand-muted">{status}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden overflow-x-auto md:block">
                   <Table className="min-w-175">
                     <TableHeader>
                       <TableRow>
@@ -251,7 +276,7 @@ export default async function StudentDashboardPage() {
           </TabsContent>
         </Tabs>
 
-        <aside className="space-y-4">
+        <aside className="order-first space-y-4 xl:order-none">
           <Card className="border-border/60 bg-card/90">
             <CardHeader>
               <CardTitle className="text-brand-ink">Progress notes</CardTitle>

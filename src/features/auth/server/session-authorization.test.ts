@@ -44,7 +44,28 @@ describe("ensureAllowlistedSession", () => {
 
     await expect(ensureAllowlistedSession(client, "abc")).resolves.toBe("session-user-missing");
     expect(spies.signOut).toHaveBeenCalledTimes(1);
+    expect(spies.from).not.toHaveBeenCalled();
     expect(spies.rpc).not.toHaveBeenCalled();
+  });
+
+  it("allows login immediately when a profile already exists", async () => {
+    const { client, spies } = createSupabaseClient();
+    spies.exchangeCodeForSession.mockResolvedValue({ error: null });
+    spies.getUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "existing-user",
+          email: "existing@school.edu",
+          user_metadata: { full_name: "Existing User" },
+        },
+      },
+      error: null,
+    });
+    spies.maybeSingle.mockResolvedValue({ data: { id: "existing-user" }, error: null });
+
+    await expect(ensureAllowlistedSession(client, "abc")).resolves.toBeNull();
+    expect(spies.rpc).not.toHaveBeenCalled();
+    expect(spies.signOut).not.toHaveBeenCalled();
   });
 
   it("trims the full name before calling the allowlist RPC", async () => {
@@ -60,6 +81,7 @@ describe("ensureAllowlistedSession", () => {
       },
       error: null,
     });
+    spies.maybeSingle.mockResolvedValue({ data: null, error: null });
     spies.rpc.mockResolvedValue({ data: false, error: null });
 
     await expect(ensureAllowlistedSession(client, "abc")).resolves.toBe("not-approved");
@@ -84,6 +106,7 @@ describe("ensureAllowlistedSession", () => {
       },
       error: null,
     });
+    spies.maybeSingle.mockResolvedValue({ data: null, error: null });
     spies.rpc.mockResolvedValue({ data: true, error: null });
 
     await expect(ensureAllowlistedSession(client, "abc")).resolves.toBeNull();

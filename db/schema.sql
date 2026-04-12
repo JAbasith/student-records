@@ -551,7 +551,7 @@ WHERE ay.is_active = TRUE;
 -- First successful login flow:
 -- 1) OAuth callback checks allowlist by email.
 -- 2) If allowed, create/update profile with role and school.
--- 3) If role is teacher/student, optionally link to existing domain row.
+-- 3) If role is teacher/student, create or link the matching domain row.
 -- 4) If not allowed, login is rejected.
 -- =============================================================================
 
@@ -618,12 +618,26 @@ BEGIN
         is_active = TRUE;
 
     IF allowed.role = 'teacher' THEN
+        INSERT INTO teachers (school_id, profile_id, employee_no)
+        VALUES (allowed.school_id, p_user_id, allowed.employee_no)
+        ON CONFLICT (school_id, employee_no)
+        DO UPDATE SET
+            profile_id = EXCLUDED.profile_id
+        WHERE teachers.profile_id IS NULL OR teachers.profile_id = EXCLUDED.profile_id;
+
         UPDATE teachers
         SET profile_id = p_user_id
         WHERE school_id = allowed.school_id
           AND employee_no = allowed.employee_no
           AND profile_id IS NULL;
     ELSIF allowed.role = 'student' THEN
+        INSERT INTO students (school_id, profile_id, admission_no)
+        VALUES (allowed.school_id, p_user_id, allowed.admission_no)
+        ON CONFLICT (school_id, admission_no)
+        DO UPDATE SET
+            profile_id = EXCLUDED.profile_id
+        WHERE students.profile_id IS NULL OR students.profile_id = EXCLUDED.profile_id;
+
         UPDATE students
         SET profile_id = p_user_id
         WHERE school_id = allowed.school_id

@@ -105,7 +105,7 @@ export default async function TeacherDashboardPage() {
                 Scope-limited access
               </Badge>
             </div>
-            <CardTitle className="max-w-2xl text-3xl font-semibold tracking-tight text-brand-ink sm:text-4xl">
+            <CardTitle className="max-w-2xl text-2xl font-semibold tracking-tight text-brand-ink sm:text-3xl lg:text-4xl">
               Track attendance, grading, and class progress without losing the thread.
             </CardTitle>
             <CardDescription className="max-w-2xl text-base leading-7 text-brand-muted">
@@ -200,7 +200,18 @@ export default async function TeacherDashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                <div className="space-y-3 md:hidden">
+                  {timetable.map(([section, subject, period, action]) => (
+                    <div key={`${section}-${period}`} className="rounded-2xl border border-border/70 bg-muted/40 p-4">
+                      <p className="font-medium text-brand-ink">{section}</p>
+                      <p className="mt-1 text-sm text-brand-muted">{subject}</p>
+                      <p className="text-sm text-brand-muted">{period}</p>
+                      <p className="mt-2 text-sm font-medium text-primary">{action}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden overflow-x-auto md:block">
                   <Table className="min-w-[680px]">
                     <TableHeader>
                       <TableRow>
@@ -268,7 +279,7 @@ export default async function TeacherDashboardPage() {
           </TabsContent>
         </Tabs>
 
-        <aside className="space-y-4">
+        <aside className="order-first space-y-4 xl:order-none">
           <Card className="border-border/60 bg-card/90">
             <CardHeader>
               <CardTitle className="text-brand-ink">Teaching notes</CardTitle>

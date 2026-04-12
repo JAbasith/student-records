@@ -54,6 +54,45 @@ This design supports creating student/teacher records before provisioning login 
 
 Access control rules and route-level permissions are documented in [docs/access-control.md](access-control.md).
 
+## Repository Structure
+
+### `src/app`
+
+- route segments, pages, layouts, and route handlers
+- app-wide wrappers such as providers and global shell composition
+- route guards and top-level navigation shells
+
+### `src/components`
+
+- reusable UI primitives in `src/components/ui`
+- app-agnostic visual components only
+- avoid putting feature-specific business logic here
+
+### `src/features`
+
+- feature modules grouped by domain, such as `auth`, `allowlist`, and `access-control`
+- each feature may contain `actions`, `components`, `constants`, `server`, `utils`, and local types
+- feature imports should stay inside the same module boundary when possible
+
+### `src/lib`
+
+- shared infrastructure clients and low-level helpers
+- keep framework and vendor setup here, such as Supabase clients and generic utilities
+
+### Root folders
+
+- `db`: schema and database migration assets
+- `docs`: architecture and product documentation
+- `public`: static assets
+- `coverage`: generated test coverage output
+
+## Practical Rules
+
+- keep server actions under their owning feature
+- keep app-only wrappers in `src/app`
+- keep reusable design-system pieces in `src/components/ui`
+- keep business logic out of route files unless the route is the natural owner
+
 ## Academic Calendar and School Structure
 
 ### Calendar layer
