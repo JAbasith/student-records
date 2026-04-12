@@ -105,13 +105,11 @@ export async function getSessionUserRole(supabase: unknown): Promise<UserRole | 
       .maybeSingle();
 
     if (!error && data) {
-      console.log("DEBUG: getSessionUserRole found role on attempt", attempt + 1, ":", data.role);
       return data.role;
     }
 
     if (attempt < 4) {
       const delayMs = 200 * (attempt + 1); // 200ms, 400ms, 600ms, 800ms
-      console.log("DEBUG: getSessionUserRole retry attempt", attempt + 2, "after", delayMs, "ms");
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }

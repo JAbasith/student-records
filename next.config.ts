@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  experimental: {
+    authInterrupts: true,
+  },
 };
 
 export default nextConfig;

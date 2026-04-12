@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { forbidden, unauthorized } from "next/navigation";
 
-import { getDashboardRouteForRole, type UserRole } from "@/features/access-control";
+import type { UserRole } from "@/features/access-control";
 
 import { getSessionUserRole } from "./session-authorization";
 
@@ -8,7 +8,7 @@ export async function getAuthenticatedUserRoleOrRedirect(supabase: unknown): Pro
   const role = await getSessionUserRole(supabase);
 
   if (!role) {
-    redirect("/login");
+    unauthorized();
   }
 
   return role;
@@ -18,7 +18,7 @@ export async function requireDashboardRole(supabase: unknown, expectedRole: User
   const role = await getAuthenticatedUserRoleOrRedirect(supabase);
 
   if (role !== expectedRole) {
-    redirect(getDashboardRouteForRole(role));
+    forbidden();
   }
 
   return role;
