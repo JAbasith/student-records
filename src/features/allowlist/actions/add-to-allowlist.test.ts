@@ -12,17 +12,26 @@ import { addToAllowlist } from "./add-to-allowlist";
 
 function createSupabaseClient() {
   const getUser = vi.fn();
-  const single = vi.fn();
-  const eq = vi.fn().mockReturnValue({ single });
-  const select = vi.fn().mockReturnValue({ eq });
+  const profileSingle = vi.fn();
+  const profileEq = vi.fn().mockReturnValue({ single: profileSingle });
+  const profileSelect = vi.fn().mockReturnValue({ eq: profileEq });
+
+  const allowlistMaybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+  const allowlistEq = vi.fn();
+  allowlistEq.mockImplementation(() => ({
+    eq: allowlistEq,
+    maybeSingle: allowlistMaybeSingle,
+  }));
+  const allowlistSelect = vi.fn().mockReturnValue({ eq: allowlistEq });
+
   const insert = vi.fn();
   const from = vi.fn((table: string) => {
     if (table === "profiles") {
-      return { select };
+      return { select: profileSelect };
     }
 
     if (table === "login_allowlist") {
-      return { insert };
+      return { insert, select: allowlistSelect };
     }
 
     return undefined;
@@ -33,7 +42,17 @@ function createSupabaseClient() {
       auth: { getUser },
       from,
     },
-    spies: { getUser, single, eq, select, insert, from },
+    spies: {
+      getUser,
+      profileSingle,
+      profileEq,
+      profileSelect,
+      allowlistMaybeSingle,
+      allowlistEq,
+      allowlistSelect,
+      insert,
+      from,
+    },
   };
 }
 
@@ -59,7 +78,7 @@ describe("addToAllowlist", () => {
     const { client, spies } = createSupabaseClient();
     mocks.createClientMock.mockResolvedValue(client);
     spies.getUser.mockResolvedValue({ data: { user: { id: "user-1" } }, error: null });
-    spies.single.mockResolvedValue({ data: null, error: new Error("missing profile") });
+    spies.profileSingle.mockResolvedValue({ data: null, error: new Error("missing profile") });
 
     await expect(
       addToAllowlist({
@@ -77,7 +96,7 @@ describe("addToAllowlist", () => {
     const { client, spies } = createSupabaseClient();
     mocks.createClientMock.mockResolvedValue(client);
     spies.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
-    spies.single.mockResolvedValue({ data: { school_id: 42 }, error: null });
+    spies.profileSingle.mockResolvedValue({ data: { school_id: 42 }, error: null });
     spies.insert.mockResolvedValue({ error: null });
 
     await expect(
@@ -104,7 +123,7 @@ describe("addToAllowlist", () => {
     const { client, spies } = createSupabaseClient();
     mocks.createClientMock.mockResolvedValue(client);
     spies.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
-    spies.single.mockResolvedValue({ data: { school_id: 42 }, error: null });
+    spies.profileSingle.mockResolvedValue({ data: { school_id: 42 }, error: null });
     spies.insert.mockResolvedValue({ error: null });
 
     await expect(
@@ -131,7 +150,7 @@ describe("addToAllowlist", () => {
     const { client, spies } = createSupabaseClient();
     mocks.createClientMock.mockResolvedValue(client);
     spies.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
-    spies.single.mockResolvedValue({ data: { school_id: 42 }, error: null });
+    spies.profileSingle.mockResolvedValue({ data: { school_id: 42 }, error: null });
     spies.insert.mockResolvedValue({ error: null });
 
     await expect(
@@ -158,7 +177,7 @@ describe("addToAllowlist", () => {
     const { client, spies } = createSupabaseClient();
     mocks.createClientMock.mockResolvedValue(client);
     spies.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
-    spies.single.mockResolvedValue({ data: { school_id: 42 }, error: null });
+    spies.profileSingle.mockResolvedValue({ data: { school_id: 42 }, error: null });
     spies.insert.mockResolvedValue({ error: { code: "23505", message: "duplicate key" } });
 
     await expect(
@@ -169,5 +188,43 @@ describe("addToAllowlist", () => {
         identityNumber: "ADM-1001",
       }),
     ).resolves.toEqual({ success: false, error: "This email is already on the allowlist" });
+  });
+
+  it("returns an error when the admission number is already allowlisted in the school", async () => {
+    const { client, spies } = createSupabaseClient();
+    mocks.createClientMock.mockResolvedValue(client);
+    spies.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
+    spies.profileSingle.mockResolvedValue({ data: { school_id: 42 }, error: null });
+    spies.allowlistMaybeSingle.mockResolvedValueOnce({ data: { id: 99 }, error: null });
+
+    await expect(
+      addToAllowlist({
+        email: "student@school.edu",
+        fullName: "Student User",
+        role: "student",
+        identityNumber: "ADM-1001",
+      }),
+    ).resolves.toEqual({ success: false, error: "This admission number is already on the allowlist" });
+
+    expect(spies.insert).not.toHaveBeenCalled();
+  });
+
+  it("returns an error when the employee number is already allowlisted in the school", async () => {
+    const { client, spies } = createSupabaseClient();
+    mocks.createClientMock.mockResolvedValue(client);
+    spies.getUser.mockResolvedValue({ data: { user: { id: "admin-1" } }, error: null });
+    spies.profileSingle.mockResolvedValue({ data: { school_id: 42 }, error: null });
+    spies.allowlistMaybeSingle.mockResolvedValueOnce({ data: { id: 100 }, error: null });
+
+    await expect(
+      addToAllowlist({
+        email: "teacher@school.edu",
+        fullName: "Teacher User",
+        role: "teacher",
+        identityNumber: "EMP-2001",
+      }),
+    ).resolves.toEqual({ success: false, error: "This employee number is already on the allowlist" });
+
+    expect(spies.insert).not.toHaveBeenCalled();
   });
 });
