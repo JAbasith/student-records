@@ -1,0 +1,1 @@
+export { AcademicStructureCard } from "./AcademicStructureCard";
