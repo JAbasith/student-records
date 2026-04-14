@@ -1,6 +1,5 @@
 node_modules
-web/node_modules
-web/.next
+.next
 .git
 .husky/_
 coverage
