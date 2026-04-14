@@ -314,10 +314,17 @@ export default async function AdminDashboardPage() {
               </div>
               <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link href="#academics" className="group flex items-center justify-between rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 transition-colors hover:bg-muted">
+            <Link href="/admin/users" className="group flex items-center justify-between rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 transition-colors hover:bg-muted">
               <div>
-                <p className="font-medium text-brand-ink">Academic structure</p>
-                <p className="text-sm text-brand-muted">Years, terms, and section templates</p>
+                <p className="font-medium text-brand-ink">User management</p>
+                <p className="text-sm text-brand-muted">Unified students, teachers, and admins view</p>
+              </div>
+              <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link href="/admin/academic" className="group flex items-center justify-between rounded-2xl border border-border/70 bg-muted/40 px-4 py-3 transition-colors hover:bg-muted">
+              <div>
+                <p className="font-medium text-brand-ink">Academic setup</p>
+                <p className="text-sm text-brand-muted">Subject catalog, assignments, and enrollment</p>
               </div>
               <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </Link>

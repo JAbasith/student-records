@@ -64,7 +64,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
-            className="h-11 w-full justify-center gap-2 rounded-xl bg-(--brand-button) text-base font-semibold text-white shadow-sm hover:bg-(--brand-button-hover)"
+            className="h-11 w-full justify-center gap-2 rounded-xl border border-white/25 bg-white/10 text-base font-semibold text-(--brand-ink) shadow-sm backdrop-blur-sm transition-colors hover:bg-white/20"
             disabled={isLoading}
             onClick={signInWithGoogle}
           >

@@ -32,8 +32,8 @@ const roleNavigation: Record<UserRole, NavSection[]> = {
       items: [
         { label: "Dashboard", href: "/admin" },
         { label: "Allowlist management", href: "/admin/allowlist" },
-        { label: "User management" },
-        { label: "Academic setup" },
+        { label: "User management", href: "/admin/users" },
+        { label: "Academic setup", href: "/admin/academic" },
         { label: "Reports" },
       ],
     },
@@ -55,7 +55,7 @@ const roleNavigation: Record<UserRole, NavSection[]> = {
       title: "Student",
       items: [
         { label: "Dashboard", href: "/student" },
-        { label: "My subjects" },
+        { label: "My subjects", href: "/subjects" },
         { label: "Attendance" },
         { label: "Assessments" },
         { label: "Report cards" },
